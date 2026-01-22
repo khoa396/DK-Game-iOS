@@ -28,6 +28,12 @@
                     <a href="{{ game.download_link }}" target="_blank" class="btn btn-download">TẢI HACK</a>
                     <button class="btn btn-key" onclick="getKey('{{ game.id }}', this)">GET KEY</button>
                 </div>
+
+                <div id="result-{{ game.id }}" class="result-box" style="display: none;">
+                    <input type="text" class="link-input" readonly>
+                    <button class="btn-copy" onclick="copyLink(this)">COPY</button>
+                </div>
+
             </div>
         </div>
         {% endfor %}
@@ -39,22 +45,29 @@
 
     <script>
         async function getKey(gameId, btnElement) {
-            // Lưu text cũ và hiển thị loading
             const originalText = btnElement.innerText;
             btnElement.innerText = "Đang lấy...";
             btnElement.disabled = true;
             btnElement.style.opacity = "0.7";
 
+            // Tìm cái hộp kết quả tương ứng với game này
+            const resultBox = document.getElementById(`result-${gameId}`);
+            const inputField = resultBox.querySelector('.link-input');
+
+            // Ẩn hộp kết quả nếu đang hiện (reset)
+            resultBox.style.display = 'none';
+
             try {
-                // Gọi vào API bí mật ở Backend
                 const response = await fetch(`/api/get-key/${gameId}`, {
                     method: 'POST'
                 });
                 const data = await response.json();
 
                 if (data.success) {
-                    // Mở link trong tab mới
-                    window.open(data.url, '_blank');
+                    // [THAY ĐỔI QUAN TRỌNG] Không mở window.open nữa
+                    // Mà điền link vào ô input và hiện nó lên
+                    inputField.value = data.url;
+                    resultBox.style.display = 'flex'; // Hiện hộp kết quả
                     btnElement.innerText = "Thành công!";
                 } else {
                     alert("Lỗi: " + data.message);
@@ -62,16 +75,33 @@
                 }
             } catch (error) {
                 console.error(error);
-                alert("Có lỗi kết nối đến server.");
+                alert("Lỗi kết nối server");
                 btnElement.innerText = "Lỗi";
             } finally {
-                // Reset nút sau 3 giây
                 setTimeout(() => {
                     btnElement.innerText = originalText;
                     btnElement.disabled = false;
                     btnElement.style.opacity = "1";
                 }, 3000);
             }
+        }
+
+        // Hàm copy link vào bộ nhớ tạm
+        function copyLink(btnCopy) {
+            const input = btnCopy.parentElement.querySelector('.link-input');
+            
+            // Chọn text trong ô input
+            input.select();
+            input.setSelectionRange(0, 99999); // Cho mobile
+
+            // Thực hiện lệnh copy
+            navigator.clipboard.writeText(input.value).then(() => {
+                const oldText = btnCopy.innerText;
+                btnCopy.innerText = "ĐÃ COPY";
+                setTimeout(() => {
+                    btnCopy.innerText = oldText;
+                }, 2000);
+            });
         }
     </script>
 </body>
