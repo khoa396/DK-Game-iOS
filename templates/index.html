@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DK-Game: Share Hack iOS</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header>
+        <div class="logo">DK-GAME <span class="badge">iOS</span></div>
+        <p>Hệ thống chia sẻ Hack & Mod Game iOS miễn phí</p>
+    </header>
+
+    <div class="container">
+        {% for game in games %}
+        <div class="card">
+            <div class="card-image">
+                <img src="/static/images/{{ game.image }}" alt="{{ game.name }}">
+            </div>
+            <div class="card-content">
+                <h3>{{ game.name }}</h3>
+                <p class="desc">{{ game.desc }}</p>
+                
+                <div class="actions">
+                    <a href="{{ game.download_link }}" target="_blank" class="btn btn-download">TẢI HACK</a>
+                    <button class="btn btn-key" onclick="getKey('{{ game.id }}', this)">GET KEY</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <footer>
+        <p>&copy; 2026 DK-Game. All rights reserved.</p>
+    </footer>
+
+    <script>
+        async function getKey(gameId, btnElement) {
+            // Lưu text cũ và hiển thị loading
+            const originalText = btnElement.innerText;
+            btnElement.innerText = "Đang lấy...";
+            btnElement.disabled = true;
+            btnElement.style.opacity = "0.7";
+
+            try {
+                // Gọi vào API bí mật ở Backend
+                const response = await fetch(`/api/get-key/${gameId}`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    // Mở link trong tab mới
+                    window.open(data.url, '_blank');
+                    btnElement.innerText = "Thành công!";
+                } else {
+                    alert("Lỗi: " + data.message);
+                    btnElement.innerText = "Lỗi";
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Có lỗi kết nối đến server.");
+                btnElement.innerText = "Lỗi";
+            } finally {
+                // Reset nút sau 3 giây
+                setTimeout(() => {
+                    btnElement.innerText = originalText;
+                    btnElement.disabled = false;
+                    btnElement.style.opacity = "1";
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>
